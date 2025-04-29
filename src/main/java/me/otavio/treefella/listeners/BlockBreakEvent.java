@@ -63,36 +63,6 @@ public class BlockBreakEvent implements Listener {
         ) {
             this.checkNearbyBlocks(b, p, e);
 
-            // Grant experience orbs
-            OreXP oreXP = TreeFella.ORES_XP.get(b.getType());
-            if (oreXP != null) {
-                int xp = oreXP.getRandomXP();
-                ExperienceOrb expOrb = b.getWorld().spawn(b.getLocation(), ExperienceOrb.class);
-                expOrb.setExperience(xp);
-            }
-
-            // Apply fortune enchantment
-            if (itemInHand.containsEnchantment(org.bukkit.enchantments.Enchantment.LOOT_BONUS_BLOCKS)) {
-                int fortuneLevel = itemInHand.getEnchantmentLevel(org.bukkit.enchantments.Enchantment.LOOT_BONUS_BLOCKS);
-                // Adjust drops based on fortune level
-                e.setDropItems(false);
-                for (ItemStack drop : b.getDrops(itemInHand)) {
-                    int amount = drop.getAmount() + (int) (Math.random() * (fortuneLevel + 1));
-                    drop.setAmount(amount);
-                    b.getWorld().dropItemNaturally(b.getLocation(), drop);
-                }
-            }
-
-            // Apply unbreaking enchantment
-            if (itemInHand.containsEnchantment(org.bukkit.enchantments.Enchantment.DURABILITY)) {
-                int unbreakingLevel = itemInHand.getEnchantmentLevel(org.bukkit.enchantments.Enchantment.DURABILITY);
-                if (Math.random() < 1.0 / (unbreakingLevel + 1)) {
-                    Damageable itemMeta = (Damageable) itemInHand.getItemMeta();
-                    itemMeta.setDamage(itemMeta.getDamage() + 1);
-                    itemInHand.setItemMeta((ItemMeta) itemMeta);
-                }
-            }
-
         } else if (isPlayerPlacedBlock && TreeFella.LOGS.contains(b.getType())) {
             PlacedBlocks.get().set(path, null);
         }
@@ -118,10 +88,6 @@ public class BlockBreakEvent implements Listener {
                     if (TreeFella.LOGS.contains(nearbyBlock.getType()) || TreeFella.ORES.contains(nearbyBlock.getType())) {
                         ItemStack tool = player.getInventory().getItemInMainHand();
 
-                        // Apply Fortune enchantment
-                        int fortuneLevel = tool.getEnchantmentLevel(org.bukkit.enchantments.Enchantment.LOOT_BONUS_BLOCKS);
-                        int dropMultiplier = 1 + new Random().nextInt(fortuneLevel + 1);
-
                         if (TreeFella.ORES_XP.containsKey(nearbyBlock.getType())) {
                             int minXP = Objects.requireNonNull(TreeFella.ORES_XP.get(nearbyBlock.getType())).getMinXP();
                             int maxXP = Objects.requireNonNull(TreeFella.ORES_XP.get(nearbyBlock.getType())).getMaxXP();
@@ -131,10 +97,8 @@ public class BlockBreakEvent implements Listener {
                             ExperienceOrb orb = e.getPlayer().getWorld().spawn(nearbyBlock.getLocation(), ExperienceOrb.class);
                             orb.setExperience(xp);
                         }
-
-                        for (int d = 0; d < dropMultiplier; d++) {
-                            nearbyBlock.breakNaturally(tool);
-                        }
+                        
+						nearbyBlock.breakNaturally(tool);
 
                         int toolDurability = tool.getType().getMaxDurability();
 
